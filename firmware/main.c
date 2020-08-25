@@ -122,11 +122,11 @@ uint16_t wait_on_edge() {
   static uint8_t cur_level  = 0;
   uint8_t        next_level = cur_level;
 
-  static uint16_t cur_block_min  = 65535;
+  static uint16_t cur_block_min  = UINT16_MAX;
   static uint16_t cur_block_max  = 0;
   static uint16_t cur_block_pos  = 0;
   static uint16_t low_thresh     = 0;
-  static uint16_t high_thresh    = 65535;
+  static uint16_t high_thresh    = UINT16_MAX;
   static uint16_t peak_to_peak   = 0;
   static uint16_t cur_time       = 0;
   static uint16_t cur_level_time = 0;
@@ -160,14 +160,14 @@ uint16_t wait_on_edge() {
       high_thresh = cur_block_min + (peak_to_peak * 7) / 10;
       low_thresh = cur_block_min + (peak_to_peak * 3) / 10;
       cur_block_max = 0;
-      cur_block_min = 65535;
+      cur_block_min = UINT16_MAX;
     }
   }
   cur_level = next_level;
 
   uint16_t pulse_len;
   if (cur_time < cur_level_time) {
-    pulse_len = ((uint16_t)(65535) - cur_level_time) + (1 + cur_time);
+    pulse_len = ((uint16_t)(UINT16_MAX) - cur_level_time) + (1 + cur_time);
   } else {
     pulse_len = cur_time - cur_level_time;
   }    
@@ -191,7 +191,7 @@ void read_packet(uint8_t packet[], uint16_t ptp_buffer[], uint8_t *ptp_next_bit_
     *ptp_next_bit_pos = (*ptp_next_bit_pos + 1) % (packet_len * 8);
     
     // Determine thresholds based on the last 8 bits
-    uint16_t min = 65535, max = 0;
+    uint16_t min = UINT16_MAX, max = 0;
     uint8_t window_start = (*ptp_next_bit_pos - 8) % (packet_len * 8);
     for (uint8_t i = 0; i < 8; i++) {
       uint16_t v = ptp_buffer[(i + window_start) % (packet_len * 8)];
@@ -228,7 +228,7 @@ void read_packet(uint8_t packet[], uint16_t ptp_buffer[], uint8_t *ptp_next_bit_
       }
       packet[i / 8] |= bit_value << (7 - (i % 8));
     }
-    
+
     if (!success) {
       continue;
     }
@@ -300,7 +300,7 @@ bool stusb4500_flash(stusb4500_config cfg) {
   if (cfg.req_pd) {
     nvm[0x26] |= 0b1000;
   }
-  
+
   // STUSB4500 seems to pull down the SDA on reset and that messes
   // with internal state of the TWI. Therefore explicitly put the bus
   // into idle state.
@@ -377,7 +377,7 @@ void setup() {
   // Configure light sensor pull-up source
   SENSOR_PULLUP_SRC_PORT.DIRSET = SENSOR_PULLUP_SRC_PIN_BM;
   SENSOR_PULLUP_SRC_PORT.OUTSET = SENSOR_PULLUP_SRC_PIN_BM;
-  
+
   i2c_init();
 }
 
